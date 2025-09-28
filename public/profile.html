@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .container {
+      max-width: 400px;
+      margin: 60px auto;
+      background: #1e1e1e;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      text-align: center;
+      color: white;
+    }
+    .container h2 {
+      margin-bottom: 20px;
+      color: #0d6efd;
+    }
+    .profile-info {
+      text-align: left;
+      margin-top: 20px;
+    }
+    .profile-info p {
+      background: #2a2a2a;
+      padding: 12px;
+      border-radius: 8px;
+      margin: 8px 0;
+      font-size: 16px;
+    }
+    .back {
+      margin-top: 20px;
+      display: block;
+      text-align: center;
+      text-decoration: none;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>User Profile</h2>
+    <div class="profile-info">
+      <p><strong>Name:</strong> <span id="userName">John Doe</span></p>
+      <p><strong>Email:</strong> <span id="userEmail">johndoe@example.com</span></p>
+      <p><strong>Balance:</strong> ₹<span id="balance">100</span></p>
+      <p><strong>Attempts Left:</strong> <span id="attempts">25</span></p>
+    </div>
+
+    <a href="game.html" class="back">⬅ Back to Game</a>
+  </div>
+
+  <script>
+    // Later fetch from backend
+    document.getElementById("userName").innerText = localStorage.getItem("userName") || "John Doe";
+    document.getElementById("userEmail").innerText = localStorage.getItem("userEmail") || "demo@example.com";
+    document.getElementById("balance").innerText = localStorage.getItem("balance") || 100;
+    document.getElementById("attempts").innerText = localStorage.getItem("attempts") || 25;
+  </script>
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bet Game</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* 🔥 Header styling */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #1e1e1e;
+      padding: 12px 20px;
+      border-bottom: 2px solid #333;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+    .header h1 {
+      font-size: 20px;
+      margin: 0;
+      color: #0d6efd;
+    }
+
+    /* Desktop menu */
+    .menu {
+      display: flex;
+      gap: 15px;
+    }
+    .menu a {
+      background: #0d6efd;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    .menu a:hover {
+      background: darkblue;
+    }
+
+    /* Hamburger (mobile only) */
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      width: 28px;
+      height: 22px;
+      cursor: pointer;
+    }
+    .hamburger div {
+      width: 100%;
+      height: 4px;
+      background: white;
+      border-radius: 2px;
+      transition: all 0.3s ease;
+    }
+
+    /* Mobile menu hidden by default */
+    .menu-mobile {
+      display: none;
+      flex-direction: column;
+      background: #1e1e1e;
+      padding: 10px;
+      border-top: 1px solid #333;
+    }
+    .menu-mobile a {
+      margin: 6px 0;
+      padding: 12px;
+      font-size: 16px;
+      width: 100%;
+      background: #0d6efd;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-weight: bold;
+      text-align: center;
+      text-decoration: none;
+    }
+    .menu-mobile a:hover {
+      background: darkblue;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .menu {
+        display: none; /* hide desktop buttons */
+      }
+      .hamburger {
+        display: flex; /* show hamburger */
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 🔥 Header Section -->
+  <div class="header">
+    <h1>🎮 Blue Ball Game</h1>
+    <div class="menu">
+      <a href="withdrawal.html">Withdrawal</a>
+      <a href="addfunds.html">Add Funds</a>
+      <a href="profile.html">Profile</a>
+      <a href="index.html">Logout</a>
+    </div>
+    <div class="hamburger" onclick="toggleMenu()">
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
+  </div>
+
+  <!-- 🔥 Mobile Dropdown -->
+  <div class="menu-mobile" id="mobileMenu">
+    <a href="withdrawal.html">Withdrawal</a>
+    <a href="addfunds.html">Add Funds</a>
+    <a href="profile.html">Profile</a>
+    <a href="index.html">Logout</a>
+  </div>
+
+  <h2>🎮 Guess the Blue Ball Game</h2>
+  <p>Balance: <span id="balance">100</span></p>
+  <p>Attempts Left: <span id="attempts">25</span></p>
+
+  <div class="bet-section">
+    <input type="number" id="bet" placeholder="Enter bet amount" />
+  </div>
+
+  <div class="boxes">
+    <div class="box" onclick="play(0)">
+      <div class="box-inner">
+        <div class="box-front">?</div>
+        <div class="box-back" id="box0"></div>
+      </div>
+    </div>
+    <div class="box" onclick="play(1)">
+      <div class="box-inner">
+        <div class="box-front">?</div>
+        <div class="box-back" id="box1"></div>
+      </div>
+    </div>
+    <div class="box" onclick="play(2)">
+      <div class="box-inner">
+        <div class="box-front">?</div>
+        <div class="box-back" id="box2"></div>
+      </div>
+    </div>
+  </div>
+
+  <p id="result"></p>
+
+  <script>
+    let attemptsLeft = 25;
+    document.getElementById("attempts").innerText = attemptsLeft;
+
+    function toggleMenu() {
+      const menu = document.getElementById("mobileMenu");
+      menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+    }
+  </script>
+
+  <script src="script.js"></script>
+</body>
+</html>

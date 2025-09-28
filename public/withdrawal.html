@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Withdrawal</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 400px;
+      margin: 60px auto;
+      background: #1e1e1e;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      text-align: center;
+      color: white;
+    }
+    .container h2 {
+      margin-bottom: 20px;
+      color: #0d6efd;
+    }
+    input, select {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      font-size: 16px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #0d6efd;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    button:hover {
+      background: darkblue;
+    }
+    .back {
+      margin-top: 15px;
+      display: block;
+      text-decoration: none;
+      color: #aaa;
+    }
+    .message {
+      margin-top: 15px;
+      color: #0dff92;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Withdraw Funds</h2>
+    <p>Balance: ₹<span id="balance">0</span></p>
+
+    <input type="number" id="withdrawAmount" placeholder="Enter amount to withdraw" min="1">
+    
+    <select id="withdrawMethod" onchange="toggleFields()">
+      <option value="upi">UPI</option>
+      <option value="bank">Bank Transfer</option>
+    </select>
+
+    <!-- UPI -->
+    <div id="upiFields">
+      <input type="text" id="upiId" placeholder="Enter UPI ID">
+    </div>
+
+    <!-- Bank -->
+    <div id="bankFields" style="display:none;">
+      <input type="text" id="accountNumber" placeholder="Enter Bank Account Number">
+      <input type="text" id="ifsc" placeholder="Enter IFSC Code">
+      <input type="text" id="holderName" placeholder="Enter Account Holder Name">
+    </div>
+
+    <button onclick="withdrawFunds()">Withdraw</button>
+    <p class="message" id="message"></p>
+
+    <a href="game.html" class="back">⬅ Back to Game</a>
+  </div>
+
+  <script>
+    // Load balance from localStorage
+    document.getElementById("balance").innerText = localStorage.getItem("balance") || 0;
+
+    function toggleFields() {
+      const method = document.getElementById("withdrawMethod").value;
+      document.getElementById("upiFields").style.display = method === "upi" ? "block" : "none";
+      document.getElementById("bankFields").style.display = method === "bank" ? "block" : "none";
+    }
+
+    function withdrawFunds() {
+      const balance = Number(localStorage.getItem("balance") || 0);
+      const amount = Number(document.getElementById("withdrawAmount").value);
+      const method = document.getElementById("withdrawMethod").value;
+      let message = "";
+
+      if (!amount || amount <= 0) {
+        alert("⚠️ Please enter a valid amount");
+        return;
+      }
+      if (amount > balance) {
+        alert("⚠️ Withdrawal amount cannot exceed available balance");
+        return;
+      }
+
+      if (method === "upi") {
+        const upiId = document.getElementById("upiId").value;
+        if (!upiId) {
+          alert("⚠️ Please enter your UPI ID");
+          return;
+        }
+        message = `✅ Withdrawal request of ₹${amount} via UPI (${upiId}) submitted!`;
+      } else {
+        const acc = document.getElementById("accountNumber").value;
+        const ifsc = document.getElementById("ifsc").value;
+        const holder = document.getElementById("holderName").value;
+        if (!acc || !ifsc || !holder) {
+          alert("⚠️ Please fill all bank details");
+          return;
+        }
+        message = `✅ Withdrawal request of ₹${amount} via Bank Transfer submitted!`;
+      }
+
+      // Deduct from localStorage balance
+      localStorage.setItem("balance", balance - amount);
+      document.getElementById("balance").innerText = localStorage.getItem("balance");
+
+      // Show success message
+      document.getElementById("message").innerText = message + 
+        " Money will be transferred to your account within 2-3 working days.";
+    }
+  </script>
+</body>
+</html>

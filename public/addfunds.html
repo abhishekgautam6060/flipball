@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Add Funds</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: white;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      color: #0d6efd;
+    }
+
+    .form-container {
+      background: #1e1e1e;
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 400px;
+      margin: 0 auto;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 6px;
+      font-weight: bold;
+      text-align: left;
+    }
+
+    select, input, button {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+    }
+
+    button {
+      background: #0d6efd;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: darkblue;
+    }
+
+    #upiSection, #scannerSection {
+      display: none;
+      margin-top: 10px;
+    }
+
+    #scannerSection img, #upiSection img {
+      width: 100%;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+
+    .message {
+      margin-top: 10px;
+      color: #0dff92;
+    }
+
+    .back {
+      margin-top: 15px;
+      display: block;
+      text-decoration: none;
+      color: #aaa;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #1e1e1e;
+      padding: 10px 15px;
+      border-bottom: 2px solid #333;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .header h1 {
+      font-size: 20px;
+      color: #0d6efd;
+      margin: 0;
+    }
+
+    .menu button {
+      margin-left: 10px;
+      font-size: 14px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      background: #0d6efd;
+      color: white;
+      cursor: pointer;
+    }
+
+    .menu button:hover {
+      background: darkblue;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <h1>🎮 Blue Ball Game</h1>
+    <div class="menu">
+      <button onclick="window.location.href='game.html'">Back to Game</button>
+      <button onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="form-container">
+    <h2>Add Funds</h2>
+
+    <label for="amount">Amount (min ₹1000):</label>
+    <input type="number" id="amount" placeholder="Enter amount" min="1000" />
+
+    <label for="method">Payment Method:</label>
+    <select id="method" onchange="togglePaymentMethod()">
+      <option value="upi">UPI</option>
+      <option value="scanner">Scanner</option>
+    </select>
+
+    <!-- UPI Section -->
+    <div id="upiSection">
+      <p>Your UPI: <b>fsdfdsfd@ptsbi</b></p>
+      <label for="utr">UTR Number:</label>
+      <input type="text" id="utr" placeholder="Enter UTR number" />
+      <label for="screenshot">Upload Payment Screenshot:</label>
+      <input type="file" id="screenshot" />
+    </div>
+
+    <!-- Scanner Section -->
+    <div id="scannerSection">
+      <img src="./sacnner.png" alt="Scanner QR" />
+      <label for="utrScanner">UTR Number:</label>
+      <input type="text" id="utrScanner" placeholder="Enter UTR number" />
+      <label for="screenshotScanner">Upload Payment Screenshot:</label>
+      <input type="file" id="screenshotScanner" />
+    </div>
+
+    <button onclick="submitFunds()">Submit</button>
+    <p class="message" id="message"></p>
+  </div>
+
+  <script>
+    const email = localStorage.getItem("email");
+
+    function togglePaymentMethod() {
+      const method = document.getElementById("method").value;
+      document.getElementById("upiSection").style.display = method === "upi" ? "block" : "none";
+      document.getElementById("scannerSection").style.display = method === "scanner" ? "block" : "none";
+    }
+
+    async function submitFunds() {
+      const amount = Number(document.getElementById("amount").value);
+      if (amount < 1000) {
+        document.getElementById("message").innerText = "Minimum ₹1000 required!";
+        return;
+      }
+
+      try {
+        const res = await fetch("/addFunds", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, amount })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById("message").innerText = `Funds added! New balance: ₹${data.balance}, Attempts: ${data.attempts}`;
+          // Update localStorage
+          localStorage.setItem("balance", data.balance);
+          localStorage.setItem("attempts", data.attempts);
+        } else {
+          document.getElementById("message").innerText = data.message;
+        }
+      } catch (err) {
+        document.getElementById("message").innerText = "Something went wrong!";
+        console.error(err);
+      }
+    }
+
+    function logout() {
+      fetch("/logout").then(() => {
+        window.location.href = "login.html";
+      });
+    }
+  </script>
+</body>
+</html>
