@@ -1,50 +1,64 @@
 import express from "express";
-import session from "express-session";
-import bodyParser from "body-parser";
 import mongoose from "mongoose";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
-// Connect to MongoDB
-// mongoose.connect("mongodb://127.0.0.1:27017/betGameDB", {
-mongoose.connect("mongodb+srv://flipball:PMuHdBPAU73MVWmK@flipball.zre5q6f.mongodb.net/?retryWrites=true&w=majority&appName=flipball", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log("MongoDB connected"))
-.catch(err => console.log(err));
+// Needed for ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// User Schema
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Serve frontend
+app.use(express.static(path.join(__dirname, "public")));
+
+// --------------------
+// MongoDB Connection
+// --------------------
+mongoose
+  .connect(process.env.MONGO_URI || "mongodb://localhost:27017/flipball", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("✅ MongoDB connected"))
+  .catch((err) => console.error("❌ MongoDB error:", err));
+
+// --------------------
+// Schema & Model
+// --------------------
 const userSchema = new mongoose.Schema({
-  email: { type: String, unique: true, required: true },
-  password: { type: String, required: true },
-  balance: { type: Number, default: 0 },
-  attempts: { type: Number, default: 0 }
+  firstname: String,
+  lastname: String,
+  email: { type: String, unique: true },
+  password: String,
+  balance: { type: Number, default: 100 },
+  attempts: { type: Number, default: 0 },
 });
 
 const User = mongoose.model("User", userSchema);
 
-app.use(bodyParser.json());
-app.use(express.static("public"));
-app.use(session({
-  secret: "secret-key",
-  resave: false,
-  saveUninitialized: true,
-}));
+// --------------------
+// Routes
+// --------------------
 
 // Signup
 app.post("/signup", async (req, res) => {
-  const { email, password } = req.body;
+  const { firstname, lastname, email, password } = req.body;
   try {
     let existingUser = await User.findOne({ email });
-    if (existingUser) return res.json({ success: false, message: "User already exists!" });
-
-    const newUser = new User({ email, password });
+    if (existingUser) {
+      return res.json({ success: false, message: "User already exists!" });
+    }
+    const newUser = new User({ firstname, lastname, email, password });
     await newUser.save();
     res.json({ success: true, message: "Signup successful!" });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     res.json({ success: false, message: "Signup failed!" });
   }
 });
@@ -53,137 +67,65 @@ app.post("/signup", async (req, res) => {
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
-    const user = await User.findOne({ email });
-    if (!user || user.password !== password) {
+    const user = await User.findOne({ email, password });
+    if (!user) {
       return res.json({ success: false, message: "Invalid credentials!" });
     }
-    req.session.user = email; // store in session
-    res.json({
-      success: true,
-      balance: user.balance,
-      attempts: user.attempts
-    });
+    // ✅ Instead of session → frontend will store email in localStorage
+    res.json({ success: true, message: "Login successful!", email: user.email });
   } catch (err) {
+    console.error(err);
     res.json({ success: false, message: "Login failed!" });
   }
 });
 
-
-// Add funds
-app.post("/addFunds", async (req, res) => {
-    const { email, amount } = req.body;
-  
-    if (amount < 1000) return res.json({ success: false, message: "Minimum ₹1000 required!" });
-  
-    try {
-      const user = await User.findOne({ email });
-      if (!user) return res.json({ success: false, message: "User not found" });
-  
-      user.balance += amount;
-      user.attempts += 25; // increment by 25
-      await user.save();
-  
-      res.json({ success: true, balance: user.balance, attempts: user.attempts });
-    } catch (err) {
-      res.json({ success: false, message: "Failed to add funds" });
-    }
-});
-
-// Get balance + attempts
+// Get Balance
 app.get("/balance", async (req, res) => {
-  const email = req.session.user || req.query.email; // check session or query param
-  if (!email) return res.json({ success: false });
+  const { email } = req.query;
+  if (!email) return res.json({ success: false, message: "No email provided!" });
 
-  try {
-    const user = await User.findOne({ email });
-    if (!user) return res.json({ success: false });
-    res.json({
-      success: true,
-      balance: user.balance,
-      attempts: user.attempts
-    });
-  } catch (err) {
-    res.json({ success: false });
-  }
-});
+  const user = await User.findOne({ email });
+  if (!user) return res.json({ success: false, message: "User not found!" });
 
-// Play game
-app.post("/play", async (req, res) => {
-  const email = req.session.user;
-  if (!email) return res.json({ success: false, message: "Unauthorized!" });
-
-  const { bet, choice } = req.body;
-
-  try {
-    const user = await User.findOne({ email });
-    if (!user) return res.json({ success: false });
-
-    if (user.attempts <= 0) {
-      return res.json({ success: false, message: "❌ No attempts left! Add more funds to play again." });
-    }
-    if (bet > user.balance) {
-      return res.json({ success: false, message: "Insufficient balance!" });
-    }
-
-    // user.attempts--;
-
-    // const numBoxes = 3;
-    // const blueBox = Math.floor(Math.random() * numBoxes);
-    // const win = choice === blueBox;
-    // const winAmount = win ? bet * 5 : 0;
-    // const lost = win ? 0 : bet;
-
-    // user.balance += winAmount - lost;
-    // await user.save();
-
-// Track attempt count globally per user
-if (!user.attemptCount) {
-  user.attemptCount = 0;
-}
-user.attemptCount++;
-
-// Controlled Blue Ball Logic
-let blueBox;
-if (user.attemptCount % 4 === 0) {
-  // Every 4th attempt → cycle through 0,1,2
-  const cycle = Math.floor(user.attemptCount / 4) % 3;
-  blueBox = cycle; // 0 = box1, 1 = box2, 2 = box3
-} else {
-  // Random placement for other attempts
-  const numBoxes = 3;
-  blueBox = Math.floor(Math.random() * numBoxes);
-}
-
-// Win / Lose calculation
-const win = choice === blueBox;
-const winAmount = win ? bet * 5 : 0;
-const lost = win ? 0 : bet;
-
-// Update balance & attempts
-user.balance += winAmount - lost;
-user.attempts -= 1;
-
-await user.save();
-
-    res.json({
-      success: true,
-      blueBox,
-      win,
-      winAmount,
-      lost,
-      newBalance: user.balance,
-      remainingAttempts: user.attempts
-    });
-  } catch (err) {
-    res.json({ success: false, message: "Error playing game" });
-  }
-});
-
-// Logout
-app.get("/logout", (req, res) => {
-  req.session.destroy(() => {
-    res.redirect("/index.html");
+  res.json({
+    success: true,
+    balance: user.balance,
+    attempts: user.attempts,
   });
 });
 
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+// Update Balance
+app.post("/update-balance", async (req, res) => {
+  const { email, balance, attempts } = req.body;
+  try {
+    const user = await User.findOneAndUpdate(
+      { email },
+      { balance, attempts },
+      { new: true }
+    );
+    if (!user) return res.json({ success: false, message: "User not found!" });
+    res.json({ success: true, message: "Balance updated!" });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, message: "Error updating balance" });
+  }
+});
+
+// Logout → frontend will just clear localStorage
+app.get("/logout", (req, res) => {
+  res.json({ success: true, message: "Logged out!" });
+});
+
+// --------------------
+// Catch-all for frontend (Render needs this)
+// --------------------
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+// --------------------
+// Start Server
+// --------------------
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+});
